@@ -1,0 +1,26 @@
+services:
+  catalog-service:
+    build:
+      context: .
+      dockerfile: catalog/Dockerfile
+    container_name: catalog-service
+    ports:
+      - "8081:8081" 
+    environment:
+      - SERVER_PORT=8081
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:catalogdb;DB_CLOSE_DELAY=-1
+
+  order-service:
+    build:
+      context: .
+      dockerfile: order/Dockerfile
+    container_name: order-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:orderdb;DB_CLOSE_DELAY=-1
+      - CATALOG_SERVICE_URL=http://catalog-service:8081/api/v1/products
+    depends_on:
+      catalog-service:
+        condition: service_started
