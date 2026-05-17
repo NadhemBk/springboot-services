@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -28,8 +29,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ProductValidationException.class)
-    public ResponseEntity<ErrorResponse> handleCatalogError(ProductValidationException ex) {
-        return buildError(HttpStatus.UNPROCESSABLE_ENTITY, "INVALID_PRODUCTS", ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleProductValidation(ProductValidationException ex) {
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                "INVALID_PRODUCTS",
+                ex.getMessage(),
+                ex.getMissingIds()
+        );
+        return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @ExceptionHandler(IllegalStateTransitionException.class)
@@ -91,4 +99,8 @@ public class GlobalExceptionHandler {
     }
 }
 
-record ErrorResponse(LocalDateTime timestamp, int status, String errorCode, String message) {}
+record ErrorResponse(LocalDateTime timestamp, int status, String errorCode, String message, List<String> missingIds) {
+    public ErrorResponse(LocalDateTime timestamp, int status, String errorCode, String message) {
+        this(timestamp, status, errorCode, message, null);
+    }
+}
